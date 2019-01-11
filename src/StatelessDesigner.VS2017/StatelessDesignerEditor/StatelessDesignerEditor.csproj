@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" 
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
@@ -68,54 +67,38 @@
   </PropertyGroup>
   <Choose>
     <When Condition="Exists('..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\envdte.dll')">
-      <ItemGroup>
-        <Reference Include="envdte1">
-          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\envdte.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte1001">
-          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Common Files\Microsoft Shared\MSEnv\PublicAssemblies\envdte100.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte801">
-          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\envdte80.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte901">
-          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\envdte90.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.CommandBars1">
-          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Common Files\Microsoft Shared\MSEnv\PublicAssemblies\Microsoft.VisualStudio.CommandBars.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-      </ItemGroup>
+      <PropertyGroup>
+        <envdteLocation>..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies</envdteLocation>
+      </PropertyGroup>
     </When>
     <Otherwise>
-      <ItemGroup>
-        <Reference Include="envdte1">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte1001">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte100.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte801">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte80.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte901">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte90.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.CommandBars1">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\Microsoft.VisualStudio.CommandBars.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-      </ItemGroup>
+      <PropertyGroup>
+        <envdteLocation>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies</envdteLocation>
+      </PropertyGroup>
     </Otherwise>
   </Choose>
+  <ItemGroup>
+    <Reference Include="envdte1">
+      <HintPath>$(envdteLocation)\envdte.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte1001">
+      <HintPath>$(envdteLocation)\envdte100.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte801">
+      <HintPath>$(envdteLocation)\envdte80.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte901">
+      <HintPath>$(envdteLocation)\envdte90.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.CommandBars1">
+      <HintPath>$(envdteLocation)\Microsoft.VisualStudio.CommandBars.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
