@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -6,6 +7,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextTemplating.VSHost;
 using StatelessXml;
 using VSLangProj80;
+using EnvDTE;
 
 namespace StatelessCodeGenerator
 {
@@ -26,6 +28,8 @@ namespace StatelessCodeGenerator
 
     protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
     {
+      var typeResolutionService = (ITypeResolutionService)ServiceProvider.GlobalProvider.GetService(typeof(ITypeResolutionService));
+
       try
       {
         var xmlParser = new XmlParser(inputFileContent);
@@ -35,7 +39,7 @@ namespace StatelessCodeGenerator
         var states = xmlParser.States;
         var startstate = xmlParser.StartState;
         var transitions = xmlParser.Transitions;
-
+                
         var sb = new StringBuilder();
         sb.Append(
           "// IMPORTANT: THIS IS MACHINE-GENERATED CODE" + Environment.NewLine +
@@ -52,7 +56,7 @@ namespace StatelessCodeGenerator
         sb.Append("{" + Environment.NewLine);
         sb.Append("  ");
         sb.Append(xmlParser.ClassType);
-        sb.Append(" class ");
+        sb.Append(" partial class ");
         sb.Append(itemname);
         sb.Append(Environment.NewLine);
         sb.Append(
