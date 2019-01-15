@@ -103,41 +103,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
   </ItemGroup>
-    <When Condition="Exists('..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PublicAssemblies\envdte.dll')">
-      <ItemGroup>
-    <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <SpecificVersion>False</SpecificVersion>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
-        </Reference>
-    <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <SpecificVersion>False</SpecificVersion>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte80.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="envdte1">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte1001">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte100.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte801">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte80.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="envdte901">
-          <HintPath>$(systemdrive)\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte90.dll</HintPath>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-        </Reference>
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />

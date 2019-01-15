@@ -1,85 +1,66 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace StatelessXml
 {
-  public class XmlParser
-  {
-    private XElement xElement = null;
-    private XNamespace ns = "http://statelessdesigner.codeplex.com/Schema";
-
-    public XmlParser(string xmlContent)
+    public static class XmlParser
     {
-      xElement = XElement.Parse(xmlContent);
-    }
+        public static readonly XNamespace ns = "http://statelessdesigner.codeplex.com/Schema";
 
-    public string ItemName
-    {
-      get
-      {
-        return xElement
-              .Descendants(ns + "itemname")
-              .First()
-              .Value;
-      }
-    }
+        /// <exception cref="NullReferenceException">If <paramref name="xmlContent"/> is <c>null</c> or it contains a malformed document.</exception>
+        public static XmlModel Parse(string xmlContent)
+        {
+            var xElement = XElement.Parse(xmlContent);
 
-    public string NameSpace
-    {
-      get
-      {
-        return xElement
-              .Descendants(ns + "namespace")
-              .First()
-              .Value;
-      }
-    }
+            if (xElement.Name != ns + "statemachine") return null;
 
-    public string ClassType
-    {
-      get
-      {
-        return xElement
-              .Descendants(ns + "class")
-              .First()
-              .Value;
-      }
-    }
+            var ItemName = xElement
+                .Descendants(ns + "itemname")
+                .First()
+                .Value;
 
-    public IEnumerable<string> Triggers
-    {
-      get { return from e in xElement.Descendants(ns + "trigger") select e.Value; }
-    }
+            var NameSpace = xElement
+                .Descendants(ns + "namespace")
+                .First()
+                .Value;
 
-    public string StartState
-    {
-      get
-      {
-        return (from xElem in xElement.Descendants(ns + "state")
-                where (xElem.Attribute("start") != null && xElem.Attribute("start").Value == "yes")
-                select xElem.Value).FirstOrDefault();
-      }
-    }
+            var ClassType = xElement
+                .Descendants(ns + "class")
+                .First()
+                .Value;
 
-    public IEnumerable<string> States
-    {
-      get { return from e in xElement.Descendants(ns + "state") select e.Value; }
-    }
+            var TriggerTypeName = xElement.Descendants(ns + "triggers").First().Attribute("fromEnum")?.Value;
+            if (TriggerTypeName == String.Empty) TriggerTypeName = null;
 
-    public IEnumerable<Transition> Transitions
-    {
-      get
-      {
-        return from xElem in xElement.Descendants(ns + "transition")
-               select
-                 new Transition
-                   {
-                     Trigger = xElem.Attribute("trigger").Value,
-                     From = xElem.Attribute("from").Value,
-                     To = xElem.Attribute("to").Value
-                   };
-      }
+            var Triggers = (TriggerTypeName == null) ?
+                (from e in xElement.Descendants(ns + "trigger") select e.Value).ToArray() :
+                (
+                    from e in xElement.Descendants(ns + "transition")
+                    select (e.Attribute("trigger") ?? e.Attribute("to")).Value
+                ).ToArray();
+
+            var StateTypeName = xElement.Descendants(ns + "states").First().Attribute("fromEnum")?.Value;
+            if (StateTypeName == String.Empty) StateTypeName = null;
+
+            var States = (StateTypeName == null)
+                ? (from e in xElement.Descendants(ns + "state") select e.Value).ToArray()
+                : xElement.Descendants(ns + "transition")
+                    .SelectMany(t => new[] {t.Attribute("from").Value, t.Attribute("to").Value}).Distinct().ToArray();
+
+            var StartState = xElement.Descendants(ns + "states").First().Attribute("startState").Value;
+
+            var Transitions = (
+                from xElem in xElement.Descendants(ns + "transition")
+                select new Transition
+                {
+                    Trigger = xElem.Attribute("trigger")?.Value ?? xElem.Attribute("To").Value,
+                    From = xElem.Attribute("from").Value,
+                    To = xElem.Attribute("to").Value
+                }).ToArray();
+
+            return new XmlModel(ItemName, NameSpace, ClassType, Triggers, TriggerTypeName, StateTypeName, States, StartState, Transitions);
+        }
     }
-  }
 }

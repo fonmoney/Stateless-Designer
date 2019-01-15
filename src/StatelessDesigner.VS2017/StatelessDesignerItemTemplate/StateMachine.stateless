@@ -12,8 +12,8 @@ For more information: https://github.com/frederiksen/Stateless-Designer
     <trigger>Push</trigger>
     <trigger>Coin</trigger>
   </triggers>
-  <states>     
-    <state start="yes">Locked</state>
+  <states startState="Locked">     
+    <state>Locked</state>
     <state>Unlocked</state>
   </states>
   <transitions>

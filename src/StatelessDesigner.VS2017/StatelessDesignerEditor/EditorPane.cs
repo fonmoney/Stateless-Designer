@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Shell;
 using EnvDTE;
 using StatelessGraph;
+using StatelessXml;
 using tom;
 
 using ISysServiceProvider = System.IServiceProvider;
@@ -1237,7 +1238,7 @@ namespace mrtn.StatelessDesignerEditor
                 // Load the file
                 editorControl.RichTextBoxControl.LoadFile(pszFilename, RichTextBoxStreamType.PlainText);
 
-                editorControl.PictureBoxControl.Image = FileToImage.ConvertFileToBitmap(pszFilename);
+                UpdateImage();
 
                 isDirty = false;
 
@@ -1297,6 +1298,21 @@ namespace mrtn.StatelessDesignerEditor
             return VSConstants.S_OK;
         }
 
+        void UpdateImage()
+        {
+            try
+            {
+                var model =
+                    XmlParser.Parse(editorControl.RichTextBoxControl.Text) ??
+                    ClassToModel.TryLoadViaDTE(editorControl.RichTextBoxControl.Text);
+                editorControl.PictureBoxControl.Image = FileToImage.ConvertModelToBitmap(model);
+            }
+            catch(Exception ex)
+            {
+                editorControl.PictureBoxControl.Image = FileToImage.ConvertModelToBitmap(null);
+            }
+        }
+
         /// <summary>
         /// Save the contents of the textbox into the specified file. If doing the save on the same file, we need to
         /// suspend notifications for file changes during the save operation.
@@ -1334,8 +1350,7 @@ namespace mrtn.StatelessDesignerEditor
             {
                 editorControl.RichTextBoxControl.SaveFile(pszFilename, RichTextBoxStreamType.PlainText);
 
-                editorControl.PictureBoxControl.Image = FileToImage.ConvertFileToBitmap(pszFilename);
-
+                UpdateImage();
             }
             catch (ArgumentException)
             {

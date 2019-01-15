@@ -18,7 +18,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       Assert.AreEqual("test1234", testObject.ItemName);
@@ -35,7 +35,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       Assert.AreEqual("anamespace", testObject.NameSpace);
@@ -52,7 +52,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       Assert.AreEqual("public", testObject.ClassType);
@@ -70,7 +70,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       var triggers = testObject.Triggers.ToList();
@@ -91,7 +91,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       var states = testObject.States.ToList();
@@ -111,7 +111,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       var transitions = testObject.Transitions.ToList();
@@ -133,7 +133,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       Assert.AreEqual("state1", testObject.StartState);
@@ -151,7 +151,7 @@ namespace UnitTests
                                "</statemachine>";
 
       // When
-      var testObject = new XmlParser(xmlString);
+      var testObject = XmlParser.Parse(xmlString);
 
       // Then
       Assert.AreEqual("state2", testObject.StartState);

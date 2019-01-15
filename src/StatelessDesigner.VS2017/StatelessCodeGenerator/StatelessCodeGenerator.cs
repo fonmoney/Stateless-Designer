@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TextTemplating.VSHost;
 using StatelessXml;
 using VSLangProj80;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace StatelessCodeGenerator
 {
@@ -28,17 +29,24 @@ namespace StatelessCodeGenerator
 
     protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
     {
-      var typeResolutionService = (ITypeResolutionService)ServiceProvider.GlobalProvider.GetService(typeof(ITypeResolutionService));
-
       try
       {
-        var xmlParser = new XmlParser(inputFileContent);
+        var xmlParser = XmlParser.Parse(inputFileContent);
+
+        if (xmlParser == null)
+        {
+            return Encoding.ASCII.GetBytes("// no statemachine could be found; no code is generated" +
+                                           Environment.NewLine);
+        }
+
         var itemname = xmlParser.ItemName;
         var ns = xmlParser.NameSpace;
         var triggers = xmlParser.Triggers;
         var states = xmlParser.States;
         var startstate = xmlParser.StartState;
         var transitions = xmlParser.Transitions;
+        var triggerTypeName = xmlParser.TriggerTypeName ?? "Trigger";
+        var stateTypeName = xmlParser.StateTypeName ?? "State";
                 
         var sb = new StringBuilder();
         sb.Append(
@@ -56,44 +64,41 @@ namespace StatelessCodeGenerator
         sb.Append("{" + Environment.NewLine);
         sb.Append("  ");
         sb.Append(xmlParser.ClassType);
-        sb.Append(" partial class ");
-        sb.Append(itemname);
-        sb.Append(Environment.NewLine);
-        sb.Append(
-          "  {" + Environment.NewLine +
-          "    public delegate void UnhandledTriggerDelegate(State state, Trigger trigger);" + Environment.NewLine +
-          "    public delegate void EntryExitDelegate();" + Environment.NewLine +
-          "    public delegate bool GuardClauseDelegate();" + Environment.NewLine +
-          Environment.NewLine +
-          "    public enum Trigger" + Environment.NewLine +
-          "    {" + Environment.NewLine
-          );
-        sb.Append(triggers.Aggregate("",
-                                     (current, trigger) =>
-                                     current + ("      " + trigger + "," + Environment.NewLine)));
-        sb.Append("    }" + Environment.NewLine + Environment.NewLine);
+        sb.AppendLine($" partial class {itemname}");
+        sb.AppendLine("  {");
 
-        sb.Append(
-          "    public enum State" + Environment.NewLine +
-          "    {" + Environment.NewLine
-          );
-        sb.Append(states.Aggregate("",
-                                     (current, state) =>
-                                     current + ("      " + state + "," + Environment.NewLine)));
-        sb.Append("    }" + Environment.NewLine + Environment.NewLine);
+        if (xmlParser.TriggerTypeName == null)
+        {
+            sb.Append(
+                "    public enum Trigger" + Environment.NewLine +
+                "    {" + Environment.NewLine
+            );
+            sb.Append(triggers.Aggregate("",
+                (current, trigger) =>
+                    current + ("      " + trigger + "," + Environment.NewLine)));
+            sb.Append("    }" + Environment.NewLine + Environment.NewLine);
+        }
 
-        sb.Append(
-          "    private readonly StateMachine<State, Trigger> stateMachine = null;" + Environment.NewLine +
-          Environment.NewLine);
+        if (xmlParser.StateTypeName == null)
+        {
+            sb.Append(
+                "    public enum State" + Environment.NewLine +
+                "    {" + Environment.NewLine
+            );
+            sb.Append(states.Aggregate("",
+                (current, state) =>
+                    current + ("      " + state + "," + Environment.NewLine)));
+            sb.Append("    }" + Environment.NewLine + Environment.NewLine);
+        }
 
         foreach (var state in states)
         {
-          sb.Append("    public EntryExitDelegate On");
+          sb.Append("    partial void On");
           sb.Append(state);
-          sb.Append("Entry = null;" + Environment.NewLine);
-          sb.Append("    public EntryExitDelegate On");
+          sb.Append("Entry();" + Environment.NewLine);
+          sb.Append("    partial void On");
           sb.Append(state);
-          sb.Append("Exit = null;" + Environment.NewLine);
+          sb.Append("Exit();" + Environment.NewLine);
         }
         foreach (var state in states)
         {
@@ -102,110 +107,48 @@ namespace StatelessCodeGenerator
                    select t;
           foreach (var t in tr)
           {
-            sb.Append("    public GuardClauseDelegate GuardClauseFrom");
-            sb.Append(t.From);
-            sb.Append("To");
-            sb.Append(t.To);
-            sb.Append("UsingTrigger");
-            sb.Append(t.Trigger);
-            sb.Append(" = null;" + Environment.NewLine);
+            sb.AppendLine($"    partial void GuardClauseFrom{t.From}To{t.To}Via{t.Trigger}(ref bool permit);");
           }
         }
-        sb.Append("    public UnhandledTriggerDelegate OnUnhandledTrigger = null;" + Environment.NewLine);
+        sb.AppendLine($"    partial void OnUnhandledTrigger({stateTypeName} state, {triggerTypeName} trigger);");
 
-        sb.Append(Environment.NewLine);
-        sb.Append("    public ");
-        sb.Append(itemname);
-        sb.Append(
-          "()" + Environment.NewLine +
-          "    {" + Environment.NewLine +
-          "      stateMachine = new StateMachine<State, Trigger>(State.");
-        sb.Append(startstate);
-        sb.Append(");" + Environment.NewLine);
+        sb.AppendLine();
+        sb.Append($"    protected StateMachine<{stateTypeName}, {triggerTypeName}> stateMachine =");
+        sb.AppendLine($" new StateMachine<{stateTypeName}, {triggerTypeName}>({stateTypeName}.{startstate});");
+        sb.AppendLine();
+        sb.AppendLine($"    protected void ConfigureStateMachine()");
+        sb.AppendLine("    {");
 
         foreach (var state in states)
         {
-          sb.Append("      stateMachine.Configure(State.");
-          sb.Append(state);
-          sb.Append(")" + Environment.NewLine);
-
-          sb.Append("        .OnEntry(() => { if (On");
-          sb.Append(state);
-          sb.Append("Entry != null) On");
-          sb.Append(state);
-          sb.Append("Entry(); })");
-          sb.Append(Environment.NewLine);
-
-          sb.Append("        .OnExit(() => { if (On");
-          sb.Append(state);
-          sb.Append("Exit != null) On");
-          sb.Append(state);
-          sb.Append("Exit(); })");
-          sb.Append(Environment.NewLine);
+          sb.AppendLine($"      stateMachine.Configure({stateTypeName}.{state})");
+          sb.AppendLine($"        .OnEntry(() => On{state}Entry())");
+          sb.AppendLine($"        .OnExit(() => On{state}Exit())");
 
           var tr = from t in transitions
                    where t.From == state
                    select t;
           foreach (var t in tr)
           {
-            var gaudClauseDelegate = string.Format("GuardClauseFrom{0}To{1}UsingTrigger{2}", t.From, t.To, t.Trigger);
+            var guardMethodCall = $"GuardClauseFrom{t.From}To{t.To}Via{t.Trigger}(ref permit)";
             if (state == t.To)
             {
-              sb.Append("        .PermitReentryIf(Trigger.");
-              sb.Append(t.Trigger);
-              sb.Append(" , () => { if (");
-              sb.Append(gaudClauseDelegate);
-              sb.Append(" != null) return ");
-              sb.Append(gaudClauseDelegate);
-              sb.Append("(); return true; } )");
-              sb.Append(Environment.NewLine);
+              sb.Append($"        .PermitReentryIf({triggerTypeName}.{t.Trigger}, ");
             }
             else
             {
-              sb.Append("        .PermitIf(Trigger.");
-              sb.Append(t.Trigger);
-              sb.Append(", State.");
-              sb.Append(t.To); 
-              sb.Append(" , () => { if (");
-              sb.Append(gaudClauseDelegate);
-              sb.Append(" != null) return ");
-              sb.Append(gaudClauseDelegate);
-              sb.Append("(); return true; } )");
-              sb.Append(Environment.NewLine);
+              sb.Append($"        .PermitIf({triggerTypeName}.{t.Trigger}, {stateTypeName}.{t.To} , ");
             }
+            sb.Append($"() => {{ var permit = true; {guardMethodCall}; return permit; }}");
+            sb.AppendLine(")");
           }
           sb.Append("      ;" + Environment.NewLine);
 
         }
-        sb.Append("      stateMachine.OnUnhandledTrigger((state, trigger) => { if (OnUnhandledTrigger != null) OnUnhandledTrigger(state, trigger); });" + Environment.NewLine);
-
-        sb.Append("    }" + Environment.NewLine);
-        sb.Append(Environment.NewLine);
-
-        sb.Append(
-          "    public bool TryFireTrigger(Trigger trigger)" + Environment.NewLine +
-          "    {" + Environment.NewLine +
-          "      if (!stateMachine.CanFire(trigger))" + Environment.NewLine +
-          "      {" + Environment.NewLine +
-          "        return false;" + Environment.NewLine +
-          "      }" + Environment.NewLine +
-          "      stateMachine.Fire(trigger);" + Environment.NewLine +
-          "      return true;" + Environment.NewLine +
-          "    }" + Environment.NewLine);
-
-        sb.Append(
-          Environment.NewLine +
-
-          "    public State GetState" + Environment.NewLine +
-          "    {" + Environment.NewLine +
-          "      get" + Environment.NewLine +
-          "      {" + Environment.NewLine +
-          "        return stateMachine.State;" + Environment.NewLine +
-          "      }" + Environment.NewLine +
-          "    }" + Environment.NewLine +
-
-          "  }" + Environment.NewLine +
-          "}");
+        sb.Append("      stateMachine.OnUnhandledTrigger((state, trigger) => { OnUnhandledTrigger(state, trigger); });" + Environment.NewLine);
+        sb.AppendLine("    }");
+        sb.AppendLine("  }");
+        sb.AppendLine("}");
 
         return Encoding.ASCII.GetBytes(sb.ToString());
       }

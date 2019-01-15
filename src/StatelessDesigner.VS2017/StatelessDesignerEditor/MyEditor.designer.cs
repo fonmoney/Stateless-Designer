@@ -1,4 +1,7 @@
-﻿namespace mrtn.StatelessDesignerEditor
+﻿using EnvDTE;
+using Microsoft.VisualStudio.Shell;
+
+namespace mrtn.StatelessDesignerEditor
 {
     partial class MyEditor
     {
@@ -103,7 +106,5 @@
         private EditorTextBox richTextBoxCtrl;
         private System.Windows.Forms.PictureBox pictureBox;
         private System.Windows.Forms.SplitContainer splitContainer1;
-
-
     }
 }

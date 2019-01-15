@@ -24,21 +24,35 @@ namespace StatelessGraph
     private const double nodeHeight = 20;
     private static string startNode = string.Empty;
 
+    public static Bitmap ConvertModelToBitmap(XmlModel model)
+    {
+        try
+        {
+            var graph = CreateAndLayoutGraph(model);
+            var bitmap = new Bitmap((int)graph.BoundingBox.Width, (int)graph.BoundingBox.Height);
+            DrawGraph(bitmap, graph);
+            return bitmap;
+        }
+        catch (Exception)
+        {
+            var thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var file = thisAssembly.GetManifestResourceStream("StatelessGraph.Resources.Error.png");
+            return new Bitmap(Image.FromStream(file));
+        }
+    }
+
     public static Bitmap ConvertFileToBitmap(string fileName)
     {
-      try
-      {
-        var graph = CreateAndLayoutGraph(fileName);
-        var bitmap = new Bitmap((int)graph.BoundingBox.Width, (int)graph.BoundingBox.Height);
-        DrawGraph(bitmap, graph);
-        return bitmap;
-      }
-      catch (Exception)
-      {
-        var thisAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-        var file = thisAssembly.GetManifestResourceStream("StatelessGraph.Resources.Error.png");
-        return new Bitmap(Image.FromStream(file));          
-      }
+        // Read the file as one string
+        var fileString = string.Empty;
+        using (var myFile = new StreamReader(fileName))
+        {
+            fileString = myFile.ReadToEnd();
+        }
+
+        var xmlParser = XmlParser.Parse(fileString);
+
+        return ConvertModelToBitmap(xmlParser);
     }
 
     private static void DrawGraph(Bitmap bitmap, GleeGraph graph)
@@ -167,17 +181,8 @@ namespace StatelessGraph
       return new System.Drawing.Point((int)point.X, (int)point.Y);
     }
 
-    private static GleeGraph CreateAndLayoutGraph(string fileName)
+    private static GleeGraph CreateAndLayoutGraph(XmlModel xmlParser)
     {
-      // Read the file as one string
-      var fileString = string.Empty;
-      using (var myFile = new StreamReader(fileName))
-      {
-        fileString = myFile.ReadToEnd();
-      }
-
-      var xmlParser = new XmlParser(fileString);
-
       startNode = xmlParser.StartState;
 
       var graph = new GleeGraph {Margins = margin};
